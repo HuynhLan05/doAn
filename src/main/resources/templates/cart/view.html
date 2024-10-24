@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Your Cart</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+  <h2>Your Cart</h2>
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+    <tr>
+      <th>Name</th>
+      <th>Quantity</th>
+      <th>Price</th>
+      <th>Total</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${cart.items}">
+      <td th:text="${item.product.name}"></td>
+      <td th:text="${item.quantity}"></td>
+      <td th:text="${item.product.price}"></td>
+      <td th:text="${item.totalPrice}"></td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+      <td colspan="3">Total Price</td>
+      <td th:text="${cart.totalPrice}"></td>
+    </tr>
+    </tfoot>
+  </table>
+  <a th:href="@{/cart/checkout}" class="btn btn-success">Checkout</a>
+  <a href="/" class="btn btn-secondary">Continue Shopping</a> <!-- Nút quay lại trang sản phẩm -->
+</div>
+</body>
+</html>

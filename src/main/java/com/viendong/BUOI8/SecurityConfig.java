@@ -43,6 +43,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(@NotNull HttpSecurity
                                                            http) throws Exception {
         return http
+                .csrf(csrf ->csrf
+                        .ignoringRequestMatchers("/api/**")
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**", "/",
                                 "/oauth/**", "/register", "/error", "/products", "/cart", "/cart/**")

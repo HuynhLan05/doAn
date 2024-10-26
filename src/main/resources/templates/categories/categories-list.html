@@ -568,8 +568,11 @@
                                 <!-- Column -->
                             </div>
                             <div class="table-responsive">
-                                <section layout:fragment="content"><h1>Categories List</h1>
-                                    <div><a th:href="@{/categories/add}" class="btn btn-primary mb-3">Add New Category</a></div>
+                                <section layout:fragment="content" class="container mt-5">
+                                    <h1>Categories List</h1>
+                                    <button class="btn btn-primary mb-3" onclick="showAddModal()">Add New Category</button>
+
+                                    <!-- Category List Table -->
                                     <table class="table table-bordered table-hover">
                                         <thead class="table-dark">
                                         <tr>
@@ -578,17 +581,8 @@
                                             <th>Actions</th>
                                         </tr>
                                         </thead>
-                                        <tbody>
-                                        <tr th:each="category : ${categories}">
-                                            <td th:text="${category.id}"></td>
-                                            <td th:text="${category.name}"></td>
-                                            <td><a
-                                                    th:href="@{/categories/edit/{id}(id=${category.id})}"
-                                                    class="btn btn-success btn-sm">Edit</a> <a
-                                                    th:href="@{/categories/delete/{id}(id=${category.id})}"
-                                                    class="btn btn-danger btn-sm"
-                                                    onclick="return confirm('Are yousure?')">Delete</a></td>
-                                        </tr>
+                                        <tbody id="categoryTableBody">
+                                        <!-- Rows will be inserted here dynamically -->
                                         </tbody>
                                     </table>
                                 </section>
@@ -605,6 +599,33 @@
                                         <a class="page-link" href="#">Next</a>
                                     </li>
                                 </ul>
+
+
+                                <!-- Add/Edit Modal -->
+                                <div class="modal" id="categoryModal" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form id="categoryForm">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="categoryModalTitle"></h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <input type="hidden" id="categoryId">
+                                                    <div class="mb-3">
+                                                        <label for="categoryName" class="form-label">Category Name:</label>
+                                                        <input type="text" id="categoryName" class="form-control" required>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Save</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -647,6 +668,91 @@
 <script src="/dist/js/sidebarmenu.js"></script>
 <!--Custom JavaScript -->
 <script src="/dist/js/custom.min.js"></script>
+
+
+<script>
+    // Load categories on page load
+    $(document).ready(function() {
+        loadCategories();
+    });
+
+    function loadCategories() {
+        $.get("/api/categories", function(categories) {
+            let rows = '';
+            categories.forEach(category => {
+                rows += `<tr>
+                            <td>${category.id}</td>
+                            <td>${category.name}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" onclick="showEditModal(${category.id}, '${category.name}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteCategory(${category.id})">Delete</button>
+                            </td>
+                          </tr>`;
+            });
+            $('#categoryTableBody').html(rows);
+        });
+    }
+
+    function showAddModal() {
+        $('#categoryModalTitle').text('Add Category');
+        $('#categoryId').val('');
+        $('#categoryName').val('');
+        $('#categoryModal').modal('show');
+    }
+
+    function showEditModal(id, name) {
+        $('#categoryModalTitle').text('Edit Category');
+        $('#categoryId').val(id);
+        $('#categoryName').val(name);
+        $('#categoryModal').modal('show');
+    }
+
+    $('#categoryForm').submit(function(e) {
+        e.preventDefault();
+        const id = $('#categoryId').val();
+        const name = $('#categoryName').val();
+
+        if (id) {
+            // Update category
+            $.ajax({
+                url: `/api/categories/${id}`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name }),
+                success: function() {
+                    $('#categoryModal').modal('hide');
+                    loadCategories();
+                }
+            });
+        } else {
+            // Add new category
+            $.ajax({
+                url: `/api/categories`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name }),
+                success: function() {
+                    $('#categoryModal').modal('hide');
+                    loadCategories();
+                }
+            });
+        }
+    });
+
+    function deleteCategory(id) {
+        if (confirm('Are you sure?')) {
+            $.ajax({
+                url: `/api/categories/${id}`,
+                type: 'DELETE',
+                success: function() {
+                    loadCategories();
+                }
+            });
+        }
+    }
+</script>
+
+
 </body>
 
 </html>

@@ -569,11 +569,12 @@
               </div>
               <div class="table-responsive">
                 <div class="container mt-5">
-                  <h1 class="mb-4">Danh sách khách hàng</h1>
-                  <a class="btn btn-primary mb-3" th:href="@{/customers/add}">Thêm khách hàng</a>
+                  <h1>Danh sách khách hàng</h1>
+                  <button class="btn btn-primary mb-3" onclick="showAddModal()">Thêm khách hàng</button>
 
-                  <table class="table table-bordered">
-                    <thead>
+                  <!-- Customer List Table -->
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
                     <tr>
                       <th>STT</th>
                       <th>Tên</th>
@@ -583,19 +584,8 @@
                       <th>Hành động</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <tr th:each="customer, iterStat : ${customers}">
-                      <td th:text="${iterStat.count}"></td>
-                      <td th:text="${customer.name}"></td>
-                      <td th:text="${customer.email}"></td>
-                      <td th:text="${customer.phoneNumber}"></td>
-                      <td th:text="${customer.address}"></td>
-                      <td>
-                        <a class="btn btn-warning" th:href="@{/customers/edit/{id}(id=${customer.id})}">Sửa</a>
-                        <a class="btn btn-danger" th:href="@{/customers/delete/{id}(id=${customer.id})}"
-                           onclick="return confirm('Bạn có chắc chắn muốn xóa khách hàng này?');">Xóa</a>
-                      </td>
-                    </tr>
+                    <tbody id="customerTableBody">
+                    <!-- Rows will be added here dynamically -->
                     </tbody>
                   </table>
                 </div>
@@ -612,6 +602,46 @@
                     <a class="page-link" href="#">Next</a>
                   </li>
                 </ul>
+
+
+                <!-- Add/Edit Modal -->
+                <div class="modal" id="customerModal" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form id="customerForm">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="customerModalTitle"></h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <input type="hidden" id="customerId">
+                          <div class="mb-3">
+                            <label for="customerName" class="form-label">Tên</label>
+                            <input type="text" id="customerName" class="form-control" required>
+                          </div>
+                          <div class="mb-3">
+                            <label for="customerEmail" class="form-label">Email</label>
+                            <input type="email" id="customerEmail" class="form-control" required>
+                          </div>
+                          <div class="mb-3">
+                            <label for="customerPhoneNumber" class="form-label">Số điện thoại</label>
+                            <input type="text" id="customerPhoneNumber" class="form-control" required>
+                          </div>
+                          <div class="mb-3">
+                            <label for="customerAddress" class="form-label">Địa chỉ</label>
+                            <input type="text" id="customerAddress" class="form-control" required>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                          <button type="submit" class="btn btn-primary">Lưu</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+
               </div>
             </div>
           </div>
@@ -654,6 +684,103 @@
 <script src="/dist/js/sidebarmenu.js"></script>
 <!--Custom JavaScript -->
 <script src="/dist/js/custom.min.js"></script>
+
+
+<script>
+  $(document).ready(function() {
+      loadCustomers();
+  });
+
+  function loadCustomers() {
+      $.get("/api/customers", function(customers) {
+          let rows = '';
+          customers.forEach((customer, index) => {
+              rows += `<tr>
+                          <td>${index + 1}</td>
+                          <td>${customer.name}</td>
+                          <td>${customer.email}</td>
+                          <td>${customer.phoneNumber}</td>
+                          <td>${customer.address}</td>
+                          <td>
+                              <button class="btn btn-warning btn-sm" onclick="showEditModal(${customer.id}, '${customer.name}', '${customer.email}', '${customer.phoneNumber}', '${customer.address}')">Sửa</button>
+                              <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${customer.id})">Xóa</button>
+                          </td>
+                        </tr>`;
+          });
+          $('#customerTableBody').html(rows);
+      });
+  }
+
+  function showAddModal() {
+      $('#customerModalTitle').text('Thêm khách hàng');
+      $('#customerId').val('');
+      $('#customerName').val('');
+      $('#customerEmail').val('');
+      $('#customerPhoneNumber').val('');
+      $('#customerAddress').val('');
+      $('#customerModal').modal('show');
+  }
+
+  function showEditModal(id, name, email, phoneNumber, address) {
+      $('#customerModalTitle').text('Sửa khách hàng');
+      $('#customerId').val(id);
+      $('#customerName').val(name);
+      $('#customerEmail').val(email);
+      $('#customerPhoneNumber').val(phoneNumber);
+      $('#customerAddress').val(address);
+      $('#customerModal').modal('show');
+  }
+
+  $('#customerForm').submit(function(e) {
+      e.preventDefault();
+      const id = $('#customerId').val();
+      const customer = {
+          name: $('#customerName').val(),
+          email: $('#customerEmail').val(),
+          phoneNumber: $('#customerPhoneNumber').val(),
+          address: $('#customerAddress').val()
+      };
+
+      if (id) {
+          // Update customer
+          $.ajax({
+              url: `/api/customers/${id}`,
+              type: 'PUT',
+              contentType: 'application/json',
+              data: JSON.stringify(customer),
+              success: function() {
+                  $('#customerModal').modal('hide');
+                  loadCustomers();
+              }
+          });
+      } else {
+          // Add new customer
+          $.ajax({
+              url: `/api/customers`,
+              type: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify(customer),
+              success: function() {
+                  $('#customerModal').modal('hide');
+                  loadCustomers();
+              }
+          });
+      }
+  });
+
+  function deleteCustomer(id) {
+      if (confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
+          $.ajax({
+              url: `/api/customers/${id}`,
+              type: 'DELETE',
+              success: function() {
+                  loadCustomers();
+              }
+          });
+      }
+  }
+</script>
+
 </body>
 
 </html>

@@ -32,20 +32,30 @@ public class CategoryService {
     public Optional<Category> getCategoryById(Long id) {
         return categoryRepository.findById(id);
     }
-    /** * Add a new category to the database. * @param category
-     the category to add */
-    public void addCategory(Category category) {
+    /**
+     * Add a new category to the database. * @param category
+     * the category to add
+     *
+     * @return
+     */
+    public Category addCategory(Category category) {
         categoryRepository.save(category);
+        return category;
     }
-    /** * Update an existing category. * @param category the
-     category with updated information */
-    public void updateCategory(@NonNull Category category) {
+    /**
+     * Update an existing category. * @param category the
+     * category with updated information
+     *
+     * @return
+     */
+    public Category updateCategory(@NonNull Category category) {
         Category existingCategory =
                 categoryRepository.findById(category.getId()).orElseThrow(() ->
                         new IllegalStateException("Category with ID " +
                                 category.getId() + " does not exist."));
         existingCategory.setName(category.getName());
         categoryRepository.save(existingCategory);
+        return existingCategory;
     }
     /** *Delete a category by its id. * @param id the id of the
      category to delete */

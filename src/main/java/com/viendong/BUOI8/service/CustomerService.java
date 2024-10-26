@@ -18,8 +18,9 @@ public class CustomerService {
         return customerRepository.findAll();
     }
 
-    public void addCustomer(Customer customer) {
+    public Customer addCustomer(Customer customer) {
         customerRepository.save(customer);
+        return customer;
     }
 
     public Customer getCustomerById(Long id) {
@@ -27,9 +28,10 @@ public class CustomerService {
         return customer.orElse(null);
     }
 
-    public void updateCustomer(Long id, Customer customer) {
+    public Customer updateCustomer(Long id, Customer customer) {
         customer.setId(id);
         customerRepository.save(customer);
+        return customer;
     }
 
     public void deleteCustomer(Long id) {

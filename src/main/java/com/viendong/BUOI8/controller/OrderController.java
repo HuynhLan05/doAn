@@ -1,48 +1,65 @@
 package com.viendong.BUOI8.controller;
 
-import com.viendong.BUOI8.model.CartItem;
-import com.viendong.BUOI8.service.CartService;
-import com.viendong.BUOI8.service.OrderService;
+import com.viendong.BUOI8.dto.OrderRequest;
+import com.viendong.BUOI8.model.AdminOrder;
+import com.viendong.BUOI8.model.Order;
+import com.viendong.BUOI8.model.OrderDetail;
+import com.viendong.BUOI8.repository.AdminOrderRepository;
+import com.viendong.BUOI8.repository.OrderRepository;
+import com.viendong.BUOI8.repository.OrderDetailRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/order")
 public class OrderController {
-    @Autowired
-    private OrderService orderService;
 
     @Autowired
-    private CartService cartService;
+    private OrderRepository orderRepository;
 
-    @GetMapping("/checkout")
-    public String checkout(Model model) {
-        // Bạn có thể thêm thông tin cần thiết vào model trước khi hiển thị trang checkout nếu cần
-        return "cart/checkout"; // Đường dẫn tới trang kiểm tra hàng
-    }
+    @Autowired
+    private OrderDetailRepository orderDetailRepository;
 
-    @PostMapping("/submit")
-    public String submitOrder(String customerName, String customerEmail, String customerPhone,
-                              String shippingAddress, String paymentMethod) {
-        List<CartItem> cartItems = cartService.getCartItems();
-        if (cartItems.isEmpty()) {
-            return "redirect:/cart"; // Redirect nếu giỏ hàng trống
+    @Autowired
+    private AdminOrderRepository adminOrderRepository;
+
+    @PostMapping("/create")
+    public Order createOrder(@RequestBody OrderRequest orderRequest) {
+        // Tạo đơn hàng
+        Order order = new Order(
+                orderRequest.getCustomerName(),
+                orderRequest.getCustomerEmail(),
+                orderRequest.getCustomerPhone(),
+                orderRequest.getShippingAddress(),
+                orderRequest.getPaymentMethod(),
+                orderRequest.getTotalAmount(),
+                Order.OrderStatus.PENDING
+        );
+
+        // Lưu đơn hàng vào cơ sở dữ liệu
+        Order savedOrder = orderRepository.save(order);
+
+        // Lưu chi tiết đơn hàng
+        List<OrderDetail> orderDetails = orderRequest.getOrderDetails();
+        for (OrderDetail detail : orderDetails) {
+            detail.setOrder(savedOrder); // Liên kết chi tiết đơn hàng với đơn hàng
+            orderDetailRepository.save(detail);
         }
 
-        orderService.createOrder(customerName, customerEmail, customerPhone,
-                shippingAddress, paymentMethod, cartItems);
-        return "redirect:/order/confirmation"; // Chuyển hướng đến trang xác nhận đơn hàng
-    }
+        // Cập nhật thông tin quản trị
+        AdminOrder adminOrder = new AdminOrder(
+                orderRequest.getCustomerName(),
+                orderRequest.getCustomerEmail(),
+                orderRequest.getCustomerPhone(),
+                orderRequest.getShippingAddress(),
+                orderRequest.getPaymentMethod(),
+                orderRequest.getTotalAmount(),
+                AdminOrder.OrderStatus.PENDING
+        );
+        adminOrderRepository.save(adminOrder);
 
-    @GetMapping("/confirmation")
-    public String orderConfirmation(Model model) {
-        model.addAttribute("message", "Your order has been successfully placed.");
-        return "cart/order-confirmation"; // Đường dẫn đến trang xác nhận đơn hàng
+        return savedOrder;
     }
 }

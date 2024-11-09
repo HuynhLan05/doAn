@@ -20,11 +20,11 @@ public class AdminOrderService {
         return orderRepository.findById(id).orElse(null);
     }
 
-    public void saveOrder(AdminOrder order) {
+    public AdminOrder saveOrder(AdminOrder order) {
         orderRepository.save(order);
+        return order;
     }
     public void deleteOrder(Long id) {
         orderRepository.deleteById(id);
     }
-
 }

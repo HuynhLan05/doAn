@@ -3,36 +3,30 @@ package com.viendong.BUOI8.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Setter
+@Getter
+@AllArgsConstructor
 @Entity
 @Table(name = "order_details")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class OrderDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")  // Liên kết với bảng Orders
+    private Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private AdminOrder order;
-
+    private String productName;
     private int quantity;
-    private double totalPrice;
+    private double price;
 
-    public OrderDetail(Product product, AdminOrder order, int quantity, double totalPrice) {
-        this.product = product;
-        this.order = order;
+    public OrderDetail(String productName, int quantity, double price) {
+        this.productName = productName;
         this.quantity = quantity;
-        this.totalPrice = totalPrice;
+        this.price = price;
     }
 }

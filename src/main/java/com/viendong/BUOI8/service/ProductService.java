@@ -45,4 +45,8 @@ public class ProductService {
         }
         productRepository.deleteById(id);
     }
+
+    public Product findById(Long id) {
+        return productRepository.findById(id).orElse(null);
+    }
 }

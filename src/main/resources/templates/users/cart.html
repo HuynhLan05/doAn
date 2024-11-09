@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <title>Foody - Mẫu Website Thực Phẩm Hữu Cơ</title>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="" name="keywords">
+  <meta content="" name="description">
+
+  <!-- Favicon -->
+  <link href="/img/favicon.ico" rel="icon">
+
+  <!-- Google Web Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Icon Font Stylesheet -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Libraries Stylesheet -->
+  <link href="/lib/animate/animate.min.css" rel="stylesheet">
+  <link href="/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+
+  <!-- Customized Bootstrap Stylesheet -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Template Stylesheet -->
+  <link href="/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+<!-- Spinner Start -->
+<div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+  <div class="spinner-border text-primary" role="status"></div>
+</div>
+<!-- Spinner End -->
+
+<!-- Navbar Start -->
+<!-- (Mã Navbar của bạn ở đây...) -->
+<!-- Navbar End -->
+
+<!-- Product Start -->
+<div class="container-xxl py-5">
+  <div class="container">
+    <div class="row g-4">
+      <!-- Các sản phẩm sẽ được render ở đây bằng JavaScript -->
+    </div>
+  </div>
+</div>
+<!-- Product End -->
+
+<!-- Modal Giỏ Hàng -->
+<div class="modal fade" id="cartModal" tabindex="-1" role="dialog" aria-labelledby="cartModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cartModalLabel">Giỏ Hàng Của Bạn</h5>
+        <button type="button" class="close" data-dismiss="modal"  aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+          <tr>
+            <th>Tên</th>
+            <th>Số lượng</th>
+            <th>Giá</th>
+            <th>Tổng</th>
+          </tr>
+          </thead>
+          <tbody id="cartItems">
+          <!-- Các sản phẩm trong giỏ hàng sẽ được hiển thị ở đây -->
+          </tbody>
+          <tfoot>
+          <tr>
+            <td colspan="3">Tổng cộng</td>
+            <td id="totalPrice"></td>
+          </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <a href="/cart/checkout" class="btn btn-success me-2">Thanh toán</a>
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='/users/product'">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Giỏ Hàng End -->
+
+<!-- Template JavaScript -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Tạo một mảng để lưu trữ các sản phẩm trong giỏ hàng
+  let cart = [];
+
+  // Hàm thêm sản phẩm vào giỏ hàng
+  function addToCart(productName, productPrice) {
+      // Kiểm tra nếu sản phẩm đã có trong giỏ hàng chưa
+      const existingProduct = cart.find(item => item.name === productName);
+      if (existingProduct) {
+          existingProduct.quantity += 1; // Tăng số lượng nếu sản phẩm đã có trong giỏ hàng
+      } else {
+          cart.push({ name: productName, price: productPrice, quantity: 1 }); // Thêm sản phẩm mới vào giỏ hàng
+      }
+      updateCartModal(); // Cập nhật modal giỏ hàng
+  }
+
+  // Hàm cập nhật modal giỏ hàng
+  function updateCartModal() {
+      const cartItems = document.getElementById('cartItems');
+      const totalPriceElement = document.getElementById('totalPrice');
+      cartItems.innerHTML = ''; // Xóa các sản phẩm cũ trong giỏ hàng
+      let total = 0;
+
+      // Duyệt qua các sản phẩm trong giỏ hàng và hiển thị chúng trong modal
+      cart.forEach(item => {
+          const totalPrice = item.price * item.quantity;
+          total += totalPrice;
+
+          // Thêm mỗi sản phẩm vào bảng trong modal
+          const row = `<tr>
+              <td>${item.name}</td>
+              <td>${item.quantity}</td>
+              <td>${item.price.toFixed(2)}</td>
+              <td>${totalPrice.toFixed(2)}</td>
+          </tr>`;
+          cartItems.innerHTML += row;
+      });
+
+      // Cập nhật tổng tiền trong giỏ hàng
+      totalPriceElement.innerText = total.toFixed(2);
+  }
+
+  // Lắng nghe sự kiện click vào nút "Thêm vào giỏ hàng"
+  document.querySelectorAll('.add-to-cart').forEach(button => {
+      button.addEventListener('click', function() {
+          const productName = this.getAttribute('data-product-name');
+          const productPrice = parseFloat(this.getAttribute('data-product-price'));
+          addToCart(productName, productPrice);
+          $('#cartModal').modal('show'); // Hiển thị modal giỏ hàng
+      });
+  });
+
+  // Lấy dữ liệu sản phẩm và hiển thị nó
+  document.addEventListener("DOMContentLoaded", function() {
+      // Giả sử bạn sẽ lấy dữ liệu sản phẩm từ API
+      fetch('/api/products')
+          .then(response => response.json())
+          .then(data => {
+              const productContainer = document.querySelector('.row.g-4');
+              data.forEach(product => {
+                  const productHTML = `
+                      <div class="col-xl-3 col-lg-4 col-md-6">
+                          <div class="product-item">
+                              <div class="position-relative bg-light overflow-hidden">
+                                  <img class="img-fluid w-100" src="${product.imageUrl}" alt="${product.name}">
+                              </div>
+                              <div class="text-center p-4">
+                                  <a class="d-block h5 mb-2" href="/users/product/view_detail?id=${product.id}">${product.name}</a>
+                                  <span class="text-primary me-1">$${product.price}</span>
+                              </div>
+                              <div class="d-flex border-top">
+                                  <small class="w-50 text-center py-2">
+                                      <a class="text-body add-to-cart" data-product-name="${product.name}" data-product-price="${product.price}" href="javascript:void(0);">
+                                          <i class="fa fa-shopping-bag text-primary me-2"></i>Thêm vào giỏ
+                                      </a>
+                                  </small>
+                              </div>
+                          </div>
+                      </div>
+                  `;
+                  productContainer.innerHTML += productHTML;
+              });
+          })
+          .catch(error => console.error('Lỗi khi lấy sản phẩm:', error));
+  });
+</script>
+
+</body>
+</html>
